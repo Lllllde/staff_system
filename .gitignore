@@ -1,0 +1,15 @@
+﻿# 编译产物
+*.exe
+*.o
+*.obj
+*.pdb
+*.ilk
+
+# 构建目录与编辑器配置
+build/
+out/
+.vscode/
+
+# 系统文件
+Thumbs.db
+.DS_Store
