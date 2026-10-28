@@ -1,69 +1,14 @@
 #include "worker_Manager.h"
+#include<algorithm>
 WorkerManager::WorkerManager(){//构造函数
-    //1.文件不存在
-    ifstream ifs;
-    ifs.open(FILENAME,ios::in);//读文件
-
+    std::ifstream ifs(kFileName);
     if(!ifs.is_open()){
         cout<<"文件不存在"<<endl;
-        this->m_EmpNum = 0;//初始化人数
-        this->m_EmpArray = NULL;//初始化数组指针
-        this->m_FileIsEmpty = true;//初始化文件是否为空
-        ifs.close();
         return;
     }
-    
-    //2.文件存在，数据为空
-    char ch;
-    ifs>>ch;
-    if(ifs.eof())//文件为空
-    {
-        cout<<"文件为空"<<endl;
-        this->m_EmpNum = 0;//初始化人数
-        this->m_EmpArray = NULL;//初始化数组指针
-        this->m_FileIsEmpty = true;//初始化文件是否为空
-        ifs.close();
-        return;
-    }
-
-    //3.文件存在且不为空
-    int num = get_EmpNum();
-    cout<<"职工人数为"<<num<<endl;
-    this->m_EmpNum = num;//职工人数
-    this->m_EmpArray = new worker*[this->m_EmpNum];//开辟空间
-    this->init_Emp();//将文件中数据存到数组中
-    this->m_FileIsEmpty = false;//初始化文件是否为空
+    init_Emp();
 }
-int WorkerManager::get_EmpNum()//统计文件中人数
-{
-    ifstream ifs;
-    ifs.open(FILENAME, ios::in);//打开文件 读
-    int id;
-    string name;
-    int dId;
-
-    int num = 0;
-    while(ifs>>id&&ifs>>name&&ifs>>dId){
-        num++;
-    }
-    ifs.close();
-    return num;
-}
-
-WorkerManager::~WorkerManager(){//析构函数
-    if(this->m_EmpArray!=NULL){
-        for(int i=0; i<this->m_EmpNum; i++){           
-            if(this->m_EmpArray[i]!=NULL){
-                delete this->m_EmpArray[i];
-            }
-        }
-        delete[] this->m_EmpArray;
-        this->m_EmpArray = NULL;
-    }
-}
-
 void WorkerManager::show_Menu(){//展示菜单函数
-    
     cout << "*******************************" << endl;
 cout << "********  欢迎使用职工管理系统！  ********" << endl;
 cout << "***********  0.退出管理程序  ***********" << endl;
@@ -76,7 +21,6 @@ cout << "***********  6.按照编号排序  ***********" << endl;
 cout << "***********  7.清空所有文档  ***********" << endl;
     cout << "*******************************" << endl;
 cout << endl; // 最后留个空行，或者用 cout << endl;
-    
 }
 
 void WorkerManager::ExitSystem(){//退出系统函数
@@ -85,156 +29,100 @@ void WorkerManager::ExitSystem(){//退出系统函数
 }
 
 void WorkerManager::Add_Emp(){//添加职工函数
-    cout<<"添加的职工数？ "<<endl;
-
+    std::cout<<"添加的职工数？ "<<std::endl;
     int addnum = 0;//新增人数
     while (!(cin >> addnum)) {
-        cin.clear();
-        cin.ignore(1000, '\n');
-        cout << "输入有误，请输入数字！" << endl;
+        std::cin.clear();
+        std::cin.ignore(1000, '\n');
+        std::cout << "输入有误，请输入数字！" << std::endl;
     }
-    if(addnum>0){
-       
-        int NewSize = this->m_EmpNum + addnum;
-         //新空间人数=已添加人数+新增人数
-         
-        worker**newSpace = new worker*[NewSize];//开辟新空间
-        if(m_EmpArray!=NULL)//旧数据复制
+    for(int i=0; i<addnum; i++){
+        int id,dSelect;
+        std::string name;//部门选择
+        std::cout<<"第"<<i+1<<"名新职工的编号？"<<std::endl;
+        std::cin>>id;
+        std::cout<<"第"<<i+1<<"名新职工的姓名？"<<std::endl;
+        std::cin>>name;
+        std::cout<<"第"<<i+1<<"名新职工的部门？"<<std::endl;
+        std::cout<<"1.employee   2.manager   3.boss"<<std::endl;
+
+        get_Valid_Input(dSelect);//校验输入值
+        switch (dSelect)
         {
-            for(int i=0; i<m_EmpNum; i++)
-            {
-                newSpace[i] = this->m_EmpArray[i];
-                //在 C++ 底层，newSpace[i] 完全等价于 *(newSpace + i)。
-            }
-        }
-
-        for(int i=0; i<addnum; i++){
-            int id;
-            string name;//部门选择
-            int dSelect;
-
-            cout<<"第"<<i+1<<"名新职工的编号？"<<endl;
-            cin>>id;
-            
-            cout<<"第"<<i+1<<"名新职工的姓名？"<<endl;
-            cin>>name;
-            
-            cout<<"第"<<i+1<<"名新职工的部门？"<<endl;
-            cout<<"1.employee"<<endl;
-            cout<<"2.manager"<<endl;
-            cout<<"3.boss"<<endl;
-            get_Valid_Input(dSelect);//校验输入值
-            
-            worker*p_worker = NULL;
-            switch (dSelect)
-            {
-                case 1:
-                    p_worker = new employee(id,name,1);
-                    break;
-                case 2:
-                    p_worker = new manager(id,name,2);
-                    break;
-                case 3:
-                    p_worker = new boss(id,name,3);
-                    break;
+            case 1:
+                m_EmpArray.push_back(std::make_unique<employee>(id,name,1));
+                break;
+            case 2:
+                m_EmpArray.push_back(std::make_unique<manager>(id,name,2));
+                break;
+            case 3:
+                m_EmpArray.push_back(std::make_unique<boss>(id,name,3));
+                break;
             default:
                 break;
-            }
-            newSpace[m_EmpNum+i]=p_worker;
         }
-        delete[] this->m_EmpArray;//释放原有空间
-        this->m_EmpArray = newSpace;//更新指针指向
-        this->m_EmpNum = NewSize;//更新人数
-        this->save();//保存数据到文件中
-        this->m_FileIsEmpty = false;
-        cout<<"成功添加"<<addnum<<"名新职工"<<endl;
     }
-    else{
-        cout<<"输入有误"<<endl;
-    }
+    save();   
     system("pause");
     system("cls");
 }
 
 void WorkerManager::save(){//保存函数
-    ofstream ofs;
-    ofs.open(FILENAME,ios::out);
-    for(int i=0; i<this->m_EmpNum; i++){
-        ofs<<this->m_EmpArray[i]->m_Id<<" "
-        <<this->m_EmpArray[i]->m_Name<<" "
-        <<this->m_EmpArray[i]->m_DeptId<<endl;
+    std::ofstream ofs(kFileName,std::ios::out);
+    for(const auto&p:m_EmpArray){
+        ofs<<p->m_Id<<" "<<p->m_Name<<" "<<p->m_DeptId<<"\n";
     }
-    ofs.close();
 }
 
 void WorkerManager::init_Emp(){//初始化员工
-    ifstream ifs;
-    ifs.open(FILENAME,ios::in);
+    std::ifstream ifs(kFileName);
 
-    int id;
-    string name;
-    int dId;
-
-    int index=0;
-    while(ifs>>id&&ifs>>name&&ifs>>dId){
-        worker*p_worker = NULL;
-
-        if(dId==1)//普通职工
-        {
-            p_worker=new employee(id,name,dId);
+    int id,dId;
+    std::string name;
+    while(ifs>>id>>name>>dId){
+        switch(dId){
+            case 1:
+                m_EmpArray.push_back(std::make_unique<employee>(id,name,dId));
+                break;
+            case 2:
+                m_EmpArray.push_back(std::make_unique<manager>(id,name,dId));
+                break;
+            case 3:
+                m_EmpArray.push_back(std::make_unique<boss>(id,name,dId));
+                break;
+            default:std::cout<<"部门编号非法，跳过 id="<<id<<std::endl;
         }
-        else if(dId==2)//经理
-        {
-            p_worker=new manager(id,name,dId);
-        }
-        else if(dId==3)//
-        {
-            p_worker=new boss(id,name,dId);
-        }
-        else{
-            cout<<"输入有误"<<endl;
-            continue;
-        }
-        this->m_EmpArray[index] = p_worker;
-        index++;
     }
-    ifs.close();
 }
 
 void WorkerManager::Show_Emp(){//显示职工
-    if(this->m_FileIsEmpty){//判断文件是否为空
-        cout<<"文件为空"<<endl;
+    if(m_EmpArray.empty()){//判断文件是否为空
+        std::cout<<"记录为空"<<std::endl;
     }
     else{
-        for(int i=0; i<this->m_EmpNum; i++){
-            this->m_EmpArray[i]->showInfo();
+        for(const auto& p:m_EmpArray){
+            p->showInfo();
         }
     }
-    system("pause");
-    system("cls");
+    std::system("pause");
+    std::system("cls");
 }
 
 void WorkerManager::Del_Emp()//删除职工
 {
-    if(this->m_FileIsEmpty){
+    if(m_EmpArray.empty()){
         cout<<"文件不存在或记录为空"<<endl;
     }
     else{
         cout<<"要删除的职工编号是？"<<endl;
         int id=0;
-        cin>>id;
+        std::cin>>id;
         
-        int index=this->IsExist(id);
+        int index=IsExist(id);
         if(index!=-1){//说明职工存在
-            delete this->m_EmpArray[index];
-            for(int i=index; i<this->m_EmpNum-1; i++){
-                //数组前移
-                this->m_EmpArray[i]=this->m_EmpArray[i+1];
-            }
-            this->m_EmpArray[this->m_EmpNum - 1] = NULL;
-            this->m_EmpNum--;//更新当前职工人数
+            m_EmpArray.erase(m_EmpArray.begin()+index);
             this->save();
-            cout<<"删除成功"<<endl;
+            std::cout<<"删除成功"<<std::endl;
         }
         else{
             cout<<"未找到该职工，删除失败"<<endl;
@@ -244,21 +132,18 @@ void WorkerManager::Del_Emp()//删除职工
     system("cls");
 }
 
-int WorkerManager::IsExist(int id)//判断职工是否存在，存在则返回职工所在数组中的位置，不存在则返回-1//
-{
-    int index=-1;
-    for(int i=0; i<this->m_EmpNum; i++){
-        if(this->m_EmpArray[i]->m_Id== id){//找到职工
-            index=i;//记录职工编号
-            break;
+int WorkerManager::IsExist(int id){//判断职工是否存在，存在则返回职工所在数组中的位置，不存在则返回-1//
+    for(std::size_t i=0; i<this->m_EmpArray.size(); i++){
+        if(m_EmpArray[i]->m_Id== id){//找到职工
+            return static_cast<int>(i); 
         }
     }
-    return index;//返回职工编号
+    return -1;//返回职工编号
 }
 
 void WorkerManager::Mod_Emp()//修改职工
 {
-    if(this->m_FileIsEmpty){
+    if(m_EmpArray.empty()){
         cout<<"文件不存在或文件为空"<<endl;
     }
     else{
@@ -267,38 +152,31 @@ void WorkerManager::Mod_Emp()//修改职工
         cin>>id;
         int ret = this->IsExist(id);
         if(ret!=-1){
-            delete this->m_EmpArray[ret];
-            
             int newId=0;
             string newName=" ";
             int dSelect = 0;
-
             cout<<"查找到"<<id<<"号职工，请输入新职工号"<<endl;
             cin>>newId;
-
             cout<<"请输入新姓名"<<endl;
             cin>>newName;
-            
             cout<<"请输入新部门"<<endl;
-            cout<<"1.employee"<<endl;
-            cout<<"2.manager"<<endl;
-            cout<<"3.boss"<<endl;
+            cout<<"1.employee   2.manager   3.boss"<<endl;
             get_Valid_Input(dSelect);//校验输入值
-            worker*p_worker=NULL;
+            std::unique_ptr<worker>p;
             switch(dSelect){
                 case 1:
-                    p_worker=new employee(newId,newName,dSelect);
+                    p = std::make_unique<employee>(newId,newName,dSelect);
                     break;
                 case 2:
-                    p_worker=new manager(newId,newName,dSelect);
+                    p = std::make_unique<manager>(newId,newName,dSelect);
                     break;
                 case 3:
-                    p_worker=new boss(newId,newName,dSelect);
+                    p = std::make_unique<boss>(newId,newName,dSelect);
                     break;
                 default:
                     break;
             }
-            this->m_EmpArray[ret] = p_worker;
+            m_EmpArray[ret] = std::move(p);
             cout<<"修改成功"<<endl;
             this->save();
         }
@@ -312,7 +190,7 @@ void WorkerManager::Mod_Emp()//修改职工
 
 void WorkerManager::Find_Emp()//查找职工
 {
-    if(this->m_FileIsEmpty){
+    if(m_EmpArray.empty()){
         cout<<"文件不存在或文件为空"<<endl;
     }
     else{
@@ -338,14 +216,12 @@ void WorkerManager::Find_Emp()//查找职工
             string name=" ";
             cout<<"姓名为？"<<endl;
             cin>>name;
-
             bool flag=false;
-            for(int i=0; i<this->m_EmpNum; i++){
+            for(std::size_t i=0; i<m_EmpArray.size(); i++){
                 if(this->m_EmpArray[i]->m_Name==name){
-                    cout<<"查找成功，职工编号为"
-                    <<this->m_EmpArray[i]->m_Id
-                    <<"的职工信息如下"<<endl;
-                    this->m_EmpArray[i]->showInfo();
+                    std::cout<<"查找成功，职工编号为"<<
+                    m_EmpArray[i]->m_Id<<"的职工信息如下"<<std::endl;
+                    m_EmpArray[i]->showInfo();
                     flag = true;//修改flag值
                 }
             }
@@ -356,7 +232,6 @@ void WorkerManager::Find_Emp()//查找职工
         }
         else{//输入的select不是1或2
             cout<<"输入有误"<<endl;
-
         }
     }
     system("pause");//摁任意键清屏
@@ -364,7 +239,7 @@ void WorkerManager::Find_Emp()//查找职工
 }
 
 void WorkerManager::Sort_Emp(){//排序职工
-    if(this->m_FileIsEmpty){
+    if(m_EmpArray.empty()){
         cout<<"文件不存在或文件为空"<<endl;
         system("pause");
         system("cls");
@@ -376,31 +251,12 @@ void WorkerManager::Sort_Emp(){//排序职工
 
         int select=0;
         get_Valid_InputV2(select);//校验输入值
-        
-        for(int i=0; i<this->m_EmpNum; i++){
-            int MinOrMax=i;
-            for(int j=i+1; j<this->m_EmpNum; j++){
-                if(select==1){//升序
-                    if(this->m_EmpArray[MinOrMax]->m_Id > this->m_EmpArray[j]->m_Id)
-                    {
-                        MinOrMax = j;
-                    }
-                }
-                else if(select==2){//降序
-                    if(this->m_EmpArray[MinOrMax]->m_Id < this->m_EmpArray[j]->m_Id)
-                    {
-                        MinOrMax = j;
-                    }
-                }
-            }
-            //判断初始时认定的最值是否为最值，不是则交换
-            if(i!=MinOrMax){
-                worker*temp = this->m_EmpArray[i];
-                this->m_EmpArray[i]=this->m_EmpArray[MinOrMax];
-                this->m_EmpArray[MinOrMax]=temp;
-            }
-        }
-        cout<<"排序成功，结果如下"<<endl;
+        bool asc = (select == 1);
+        std::sort(m_EmpArray.begin(),m_EmpArray.end(),
+        [asc](const auto&a,const auto&b){
+            return asc ? a->m_Id<b->m_Id : a->m_Id>b->m_Id;
+        });
+        std::cout<<"排序成功，结果如下"<<std::endl;
         this->save();
         this->Show_Emp();
     }
@@ -408,33 +264,22 @@ void WorkerManager::Sort_Emp(){//排序职工
 
 void WorkerManager::Clean_File()//清空文件
 {
-    if(this->m_FileIsEmpty){
+    if(m_EmpArray.empty()){
         cout << "当前文件已空，无需清空" << endl;
         system("pause");
         system("cls");
         return; // 直接返回，不执行后面的清空
     }
     cout<<"确定清空？"<<endl;
-    cout<<"1.确定"<<endl;
-    cout<<"2.返回"<<endl;
+    cout<<"1.确定  2.返回"<<endl;
 
     int select=0;
-    cin>>select;
+    std::cin>>select;
     if(select==1){//清空文件
-        ofstream ofs(FILENAME,ios::trunc);//删除文件后重新创建
+        std::ofstream ofs(kFileName,std::ios::trunc);//删除文件后重新创建
         ofs.close();
-
-        if(this->m_EmpArray!=NULL){
-            for(int i=0; i<this->m_EmpNum; i++){//删除堆区的每个职工对象
-                delete this->m_EmpArray[i];
-                this->m_EmpArray[i] = NULL;
-            }
-            delete []this->m_EmpArray;//删除堆区数组指针
-            this->m_EmpArray = NULL;
-            this->m_EmpNum = 0;
-            this->m_FileIsEmpty = true;
-        }
-        cout<<"清空成功"<<endl;
+        m_EmpArray.clear();
+        std::cout<<"清空成功"<<std::endl;
     }
     system("pause");
     system("cls");
