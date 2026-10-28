@@ -1,4 +1,5 @@
 #include "manager.h"
+using namespace std;
 
 manager::manager(int id, string name, int dId)
 {

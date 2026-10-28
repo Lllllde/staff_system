@@ -1,4 +1,5 @@
 #include "boss.h"
+using namespace std;
 
 boss::boss(int id, string name, int dId)
 {

@@ -1,12 +1,15 @@
 #include "worker_Manager.h"
 #include<algorithm>
+#include<limits>
+#include<cstdlib>
+using namespace std;
 WorkerManager::WorkerManager(){//构造函数
     std::ifstream ifs(kFileName);
     if(!ifs.is_open()){
-        cout<<"文件不存在"<<endl;
+        std::cout<<"文件不存在"<<std::endl;
         return;
     }
-    init_Emp();
+    init_Emp(ifs);
 }
 void WorkerManager::show_Menu(){//展示菜单函数
     cout << "*******************************" << endl;
@@ -24,8 +27,14 @@ cout << endl; // 最后留个空行，或者用 cout << endl;
 }
 
 void WorkerManager::ExitSystem(){//退出系统函数
-    system("pause");
-    exit(0);
+    m_running = false;
+}
+
+void WorkerManager::pause_and_clear(){
+    std::cout<<"按回车键继续..."<<std::flush;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+    std::cin.get();
+    std::system("cls");
 }
 
 void WorkerManager::Add_Emp(){//添加职工函数
@@ -63,8 +72,7 @@ void WorkerManager::Add_Emp(){//添加职工函数
         }
     }
     save();   
-    system("pause");
-    system("cls");
+    pause_and_clear();
 }
 
 void WorkerManager::save(){//保存函数
@@ -74,9 +82,7 @@ void WorkerManager::save(){//保存函数
     }
 }
 
-void WorkerManager::init_Emp(){//初始化员工
-    std::ifstream ifs(kFileName);
-
+void WorkerManager::init_Emp(std::ifstream& ifs){//初始化员工
     int id,dId;
     std::string name;
     while(ifs>>id>>name>>dId){
@@ -104,8 +110,7 @@ void WorkerManager::Show_Emp(){//显示职工
             p->showInfo();
         }
     }
-    std::system("pause");
-    std::system("cls");
+    pause_and_clear();
 }
 
 void WorkerManager::Del_Emp()//删除职工
@@ -128,8 +133,7 @@ void WorkerManager::Del_Emp()//删除职工
             cout<<"未找到该职工，删除失败"<<endl;
         }
     }
-    system("pause");
-    system("cls");
+    pause_and_clear();
 }
 
 int WorkerManager::IsExist(int id){//判断职工是否存在，存在则返回职工所在数组中的位置，不存在则返回-1//
@@ -184,8 +188,7 @@ void WorkerManager::Mod_Emp()//修改职工
             cout<<"查无此人，修改失败"<<endl;
         }
     }
-    system("pause");//摁任意键清屏
-    system("cls");
+    pause_and_clear();
 }
 
 void WorkerManager::Find_Emp()//查找职工
@@ -234,8 +237,7 @@ void WorkerManager::Find_Emp()//查找职工
             cout<<"输入有误"<<endl;
         }
     }
-    system("pause");//摁任意键清屏
-    system("cls");
+    pause_and_clear();
 }
 
 void WorkerManager::Sort_Emp(){//排序职工
@@ -281,8 +283,7 @@ void WorkerManager::Clean_File()//清空文件
         m_EmpArray.clear();
         std::cout<<"清空成功"<<std::endl;
     }
-    system("pause");
-    system("cls");
+   pause_and_clear();
 }
 
 void WorkerManager::get_Valid_Input(int& dSelect){//校验输入值是否合规(1,2,3)

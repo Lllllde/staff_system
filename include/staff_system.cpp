@@ -1,5 +1,4 @@
 #include<iostream>
-using namespace std;
 #include"worker_Manager.h"
 #include"employee.h"
 #include"manager.h"
@@ -7,9 +6,14 @@ using namespace std;
 int main(){
     WorkerManager wm;
     int choice = 0;
-    while(true){
+    while(wm.running()){
         wm.show_Menu();
-        cin>>choice;
+        if(!(std::cin>>choice)){
+            std::cin.clear();
+            std::cin.ignore(1000,'\n');
+            std::cout<<"请输入0~7的数字"<<std::endl;
+            continue;
+        }
         switch(choice){
             case 0://退出
                 wm.ExitSystem();
